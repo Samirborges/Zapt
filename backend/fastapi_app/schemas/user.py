@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
+from uuid import UUID
 
 class UserRole(str, Enum):
     CLIENT = "CLIENT"
@@ -27,7 +28,7 @@ class UserLoginModel(BaseModel):
     
     
 class UserResponseModel(BaseModel):
-    id: str
+    id: UUID
     name: str
     email: str
     role: UserRole
@@ -36,3 +37,12 @@ class UserResponseModel(BaseModel):
         "from_attributes": True  # Pydantic V2 substitui orm_mode
     }
     
+    
+class UserCreate(BaseModel):
+    email: str
+    password: str
+    role: UserRole
+    
+    model_config = {
+        "from_attributes": True
+    }

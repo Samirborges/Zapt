@@ -1,14 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from uuid import UUID
 
-from fastapi_app.schemas.user import UserModel, UserLoginModel
+from fastapi_app.schemas.user import UserModel, UserLoginModel, UserResponseModel
 from fastapi_app.models.users import User
 from fastapi_app.core.database import get_db
 from fastapi_app.core.security import get_password_hash, verify_password
+from fastapi_app.users.service import create_user 
 
 router = APIRouter()
 
-@router.post("/login")
+@router.post("/login", response_model=UserResponseModel)
 def login(user: UserLoginModel, db: Session = Depends(get_db)):
     """Authenticate a user and return their details."""
     
@@ -20,31 +22,25 @@ def login(user: UserLoginModel, db: Session = Depends(get_db)):
     if not verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    return db_user
+    response_user: UserResponseModel = {
+        "id": str(db_user.id),
+        "name": db_user.name,
+        "email": db_user.email,
+        "role": db_user.role
+    }
+    
+    return response_user
 
 
-@router.post("/register")
+@router.post("/register", response_model=UserResponseModel)
 def register(user: UserModel, db: Session = Depends(get_db)):
     """Register a new user"""
     
-    hashed_pwd = get_password_hash(user.password)
-    
-    new_user = User(
-        name=user.name,
-        email=user.email,
-        password_hash=hashed_pwd,  # In a real app, hash the password!
-        role=user.role
-    )
-    
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    
-    return new_user 
+    return create_user(db=db, user_data=user)
 
 
-@router.get("/get-user/{user_id}")
-def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
+@router.get("/get-user/{user_id}", response_model=UserResponseModel)
+def get_user_by_id(user_id: UUID, db: Session = Depends(get_db)):
     """Retrieve a user by their ID.
 
     Args:
@@ -56,11 +52,19 @@ def get_user_by_id(user_id: str, db: Session = Depends(get_db)):
     user_db = db.query(User).filter(User.id == user_id).first()
     if not user_db:
         raise HTTPException(status_code=404, detail="User not found")
-    return user_db
+    
+    response_user: UserResponseModel = {
+        "id": str(user_db.id),
+        "name": user_db.name,
+        "email": user_db.email,
+        "role": user_db.role
+    }
+    
+    return response_user
 
 
-@router.put("/update-user/{user_id}")
-def update_user(user_id: str, user: UserModel, db: Session = Depends(get_db)):
+@router.put("/update-user/{user_id}", response_model=UserResponseModel)
+def update_user(user_id: UUID, user: UserModel, db: Session = Depends(get_db)):
     """Update user information.
 
     Args:
@@ -84,11 +88,18 @@ def update_user(user_id: str, user: UserModel, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user_db)
     
+    response_user: UserResponseModel = {
+        "id": str(user_db.id),
+        "name": user_db.name,
+        "email": user_db.email,
+        "role": user_db.role
+    }
+    
     return user_db
 
 
 @router.delete("/delete-user/{user_id}")
-def delete_user(user_id: str, db: Session = Depends(get_db)):
+def delete_user(user_id: UUID, db: Session = Depends(get_db)):
     """Delete a user by their ID.
 
     Args:

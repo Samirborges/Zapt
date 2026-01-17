@@ -1,13 +1,16 @@
 from fastapi import FastAPI
-from fastapi_app.routes import auth, appointments
+from fastapi_app.routes import auth
+from fastapi_app.appointments.router import router as appointments_router
 from fastapi_app.core.database import engine, Base
 from fastapi_app.models import users # Isso registra o modelo no Base
+from fastapi_app.appointments.models import Appointment  # Registrar o modelo de agendamento
 from sqlalchemy import text
+from fastapi_app.models import professional_profiles
 
 app = FastAPI()
 
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
-app.include_router(appointments.router, prefix="/appointments", tags=["Appointments"])
+app.include_router(appointments_router)
 
 Base.metadata.create_all(bind=engine)
 
