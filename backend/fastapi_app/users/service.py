@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from fastapi_app.models.users import User
-from fastapi_app.models.professional_profiles import ProfessionalProfile
+from fastapi_app.professional_profiles.models import ProfessionalProfile
 from fastapi_app.schemas.user import UserCreate, UserRole
 from fastapi_app.core.security import get_password_hash
 
