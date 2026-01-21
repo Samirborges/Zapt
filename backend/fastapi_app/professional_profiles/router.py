@@ -23,12 +23,11 @@ def professional_patch(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if user.role != UserRole.PROFESSIONAL:
+        raise HTTPException(status_code=403, detail="Only professionals can edit this profile")
     
     profile = get_professional_profile(user.id, db=db)
     
-    if user.role != UserRole.PROFESSIONAL:
-        raise HTTPException(status_code=403, detail="Only professionals can edit this profile")
-        
     if not profile:
         raise HTTPException(status_code=404, detail="Professional profile was not found")
     
